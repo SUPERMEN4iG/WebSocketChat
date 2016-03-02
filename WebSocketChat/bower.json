@@ -1,0 +1,23 @@
+{
+  "name": "WebSocketChat",
+  "version": "0.0.1",
+  "description": "WebSocket Chat Server",
+  "keywords": [
+    "server"
+  ],
+  "authors": [
+    "SUPER_MEN4iG"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angularjs": "~1.2.26"
+  }
+}

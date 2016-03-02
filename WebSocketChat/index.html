@@ -1,0 +1,263 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>WebSocketChat</title>
+    <script src="Scripts/jquery-1.9.1.js" type="text/javascript"></script>
+    <script src="Scripts/reconnect.js" type="text/javascript"></script>
+  <script type="text/javascript">
+
+    function GetDateTimeNow()
+    {
+      var date = new Date();
+      return date.getDay + "/" + date.getMonth + "/" + date.getFullYear + " " + date.getHours + ':' + date.getMinutes + ':' + date.getSeconds;
+    }
+
+    String.prototype.isHasSymbol = function (char)
+    {
+      if (!this.search(char))
+        return true;
+      else
+        return false;
+    }
+
+    function ArgumentNullException(message) {
+      this.name = "ArgumentNullException";
+      this.message = ("Argument \"" + message + "\" is null or empty" || "");
+    }
+
+    ArgumentNullException.prototype = new Error();
+    ArgumentNullException.prototype.constructor = ArgumentNullException;
+
+    function ApplicationException(message){
+      this.name = "ApplicationException";
+      this.message = ("Error: " + message || "");
+    }
+
+    ApplicationException.prototype = new Error();
+    ApplicationException.prototype.constructor = ApplicationException;
+
+    Storage.prototype.setObject = function (key, value) {
+      this.setItem(key, JSON.stringify(value));
+    }
+
+    Storage.prototype.getObject = function (key) {
+      var value = this.getItem(key);
+      return value && JSON.parse(value);
+    }
+
+    Object.prototype.getVaribleName = function ()
+    {
+      for (obj in window) {
+        if (window[obj] === this) {
+          return obj;
+        }
+      }
+    }
+
+    var webSocketChat;
+
+    var MessageType = {
+      Open : "Open",
+      Close : "Close",
+      Error : "Error",
+      Text: "Text",
+      Command: "Command"
+    };
+
+    function WebSocketServer(server) {
+      this.webSocket = server;
+
+      var userData = {
+        Name: new String(),
+        SessionUniqKey: new String(),
+        LastOperationDateTime: new String(),
+        isLogin: new Boolean(false)
+      };
+
+      this._userData = null;
+
+      this.__defineGetter__("userData", function () {
+        return _userData;
+      });
+
+      this.__defineSetter__("userData", function (s) {
+        _userData = s;
+      });
+
+      this.sendMessage = function (textMessage, typeMessage, userName) {
+        if (!textMessage)
+          throw new ArgumentNullException("textMessage");
+
+        if (!typeMessage)
+          throw new ArgumentNullException("typeMessage");
+
+        if (!userName)
+          throw new ArgumentNullException("userData.Name");
+
+        var sessionUniqKey = eval(localStorage.getItem("session_uniq_key"));
+
+        var message = {
+          Type: typeMessage,
+          Text: textMessage,
+          UserName: userName,
+          ClientGuid: sessionUniqKey
+        };
+
+        this.webSocket.send(JSON.stringify(message));
+      };
+
+      this.onLogin = function (login, uniq_key) {
+        if (!login)
+          throw new ArgumentNullException("login");
+
+        if (!uniq_key)
+          throw new ArgumentNullException("uniq_key");
+
+        userData.Name = login;
+        userData.SessionUniqKey = uniq_key;
+        userData.LastOperationDateTime = GetDateTimeNow();
+        this.userData = userData;
+        
+        localStorage.setObject("session_uniq_key", userData.SessionUniqKey);
+      };
+
+      this.onLogout = function () {
+        this.sendMessage(userData.SessionUniqKey, MessageType.Close);
+
+        this.webSocket.close();
+        localStorage.removeItem("session_uniq_key");
+
+        userData.isLogin = false;
+        userData.LastOperationDateTime = GetDateTimeNow();
+        this.userData = userData;
+      };
+
+      this.onTextMessage = function (message) {
+        $("#chatMessagesList").append(message.Text + "<br/>");
+        userData.LastOperationDateTime = GetDateTimeNow();
+        this.userData = userData;
+
+        setUIState(false);
+      }
+    }
+
+    $(document).ready(function () {
+
+      var userName = "Test";
+
+      webSocketChat = new ReconnectingWebSocket("ws://localhost:55555/WebSocketChat");
+
+      server = new WebSocketServer(webSocketChat);
+
+      webSocketChat.onopen = function () {
+        $("#chatMessagesList").append("Connection opened<br/>");
+
+        server.sendMessage("onLogin()", MessageType.Open, userName);
+      }
+
+      webSocketChat.onmessage = function (event) {
+        var clientMessage = JSON.parse(event.data);
+
+        switch (clientMessage.Type) {
+          case MessageType.Open:
+            server.onLogin(clientMessage.UserName, clientMessage.Text);
+            break;
+          case MessageType.Close:
+            server.onLogout();
+            break;
+          case MessageType.Text:
+            server.onTextMessage(clientMessage);
+            break;
+          case MessageType.Command:
+            break;
+        }
+
+        //if (message.Type == MessageType.Open)
+        //{
+        //  localStorage.setObject("session_uniq_key", message.Text);
+        //}
+        //else
+        //{
+        //  $("#chatMessagesList").append(message.Text + "<br/>");
+        //}
+
+        //console.log(localStorage.getItem("session_uniq_key"));
+      }
+
+      webSocketChat.onclose = function () {
+        webSocketChat.send("END");
+        webSocketChat.close();
+        $("#chatMessagesList").append("Connection closed" + "<br/>");
+      }
+
+      webSocketChat.onerror = function (error) {
+        $("#chatMessagesList").append(error.data + "<br/>");
+      }
+
+      $("#sendMessage").click(function () {
+
+        var textMessage = $("#textMessage").val();
+
+        if (!textMessage)
+          throw new ArgumentNullException("textMessage");
+
+        var messageType = MessageType.Text;
+
+        if (textMessage.isHasSymbol("/"))
+          messageType = MessageType.Command;
+
+        server.sendMessage(textMessage, messageType, userName);
+
+        setUIState(true);
+      });
+
+      $(window).bind("beforeunload", function () {
+        var uData = server.userData;
+        server.sendMessage(uData.SessionUniqKey, MessageType.Close, uData.Name);
+        server.onLogout();
+      });
+
+      $('#textMessage').keypress(function (event) {
+        var keycode = (event.keyCode ? event.keyCode : event.which);
+        if (keycode == '13') {
+          var messageText = $(this).val();
+          var messageType = MessageType.Text;
+
+          if (messageText.isHasSymbol("/"))
+            messageType = MessageType.Command;
+
+          server.sendMessage(messageText, messageType, userName);
+          $(this).val('');
+        }
+        event.stopPropagation();
+      });
+    });
+
+    function setUIState(isUpdating) {
+      if (isUpdating) {
+        $("#sendMessage").attr("disabled", "disabled");
+        $("#textMessage").attr("disabled", "disabled");
+        $("#stockQuoteGOOG").attr("disabled", "disabled");
+        $("#stopButton").removeAttr("disabled");
+      } else {
+        $("#sendMessage").removeAttr("disabled");
+        $("#textMessage").removeAttr("disabled");
+        $("#stockQuoteGOOG").removeAttr("disabled");
+        $("#stopButton").attr("disabled", "disabled");
+      }
+    }
+  </script>
+</head>
+<body>
+
+    <div>
+      <input id="textMessage" type="type" name="name" value="" />
+    </div>
+    <div>
+      <button id="sendMessage">Send</button>
+    </div>
+    <div id="chatMessagesList">
+    </div>
+
+</body>
+</html>
