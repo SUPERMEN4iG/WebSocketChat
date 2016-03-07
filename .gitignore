@@ -221,3 +221,5 @@ pip-log.txt
 .idea/
 packages/
 WebSocketChat/bower_components
+WebSocketChat/app/*.js
+WebSocketChat/app/*.map
