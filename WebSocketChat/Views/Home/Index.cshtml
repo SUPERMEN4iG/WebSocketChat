@@ -23,9 +23,11 @@
   </ul>
 </div>
 
-<div ng-controller="MyController">
-  <h1>{{message.title}}</h1>
-  <button ng-click="events.clickMe()">clickMe()</button>
+<div ng-controller="MyController">  
+  <canvas id="touchCanvas" width="400" height="400" style="background-color:#808080"
+          ng-mousemove="events.mouseMoveEvent($event.clientX, $event.clientY)"
+          ng-mousedown="events.mouseDownEvent($event.clientX, $event.clientY)"
+          ng-mouseup="events.mouseUpEvent($event.clientX, $event.clientY)"></canvas>
 </div>
 
 @*<div class="jumbotron">

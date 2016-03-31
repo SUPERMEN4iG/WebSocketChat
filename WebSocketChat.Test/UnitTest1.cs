@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using WebSocketChat.Lib.Server.Game;
 
 namespace WebSocketChat.Test
 {
@@ -24,6 +25,14 @@ namespace WebSocketChat.Test
                 .ToArray();
 
       System.Diagnostics.Trace.WriteLine(String.Format("{0} {1}", arr.GetValue(0), arr.GetValue(1)));
+    }
+
+     [TestMethod]
+    public void TestCreateGestureDamage()
+    {
+       AttackGestureDamage attackGestureDamage = new AttackGestureDamage(GestureDamage.GestureDamageType.Attack, new GesturePlayer(), new GesturePlayer(), 5);
+
+       Assert.IsNull(attackGestureDamage);
     }
   }
 }

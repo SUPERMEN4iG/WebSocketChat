@@ -18,7 +18,7 @@ namespace WebSocketChat
     }
   }
 
-  public sealed class Client : BaseClass, IDisposable
+  public class Client : BaseClass, IDisposable
   {
     public string Name { get; set; }
     public AspNetWebSocketContext WebSocketContext { get; set; }

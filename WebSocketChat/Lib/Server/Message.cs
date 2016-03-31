@@ -8,10 +8,37 @@ using System.Web;
 
 namespace WebSocketChat
 {
+   public class DamageGestureGameMessage : GestureGameMessage
+   {
+      public DamageGestureGameMessage() : base()
+      {
+         this.Type = GestureGameMessageType.Damage;
+      }
+      public WebSocketChat.Lib.Server.Game.GestureDamage Damage { get; set; }
+   }
+
+   [JsonConverter(typeof(StringEnumConverter))]
+   public class GestureGameMessage : Message
+   {
+      public GestureGameMessage() : base() { }
+
+      public enum GestureGameMessageType
+      {
+         Open = Message.MessageType.Open,
+         Close = Message.MessageType.Close,
+         Error = Message.MessageType.Error,
+         Text = Message.MessageType.Text,
+         Move,
+         Damage
+      }
+
+      internal new GestureGameMessageType Type { get; set; }
+   }
+
   public class Message
   {
     [JsonConverter(typeof(StringEnumConverter))]
-    public MessageType Type { get; set; }
+    internal MessageType Type { get; set; }
     public string UserName { get; set; }
     public string Text { get; set; }
     [JsonIgnore]

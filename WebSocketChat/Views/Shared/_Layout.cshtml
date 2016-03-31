@@ -35,9 +35,11 @@
       <p>&copy; @DateTime.Now.Year - My ASP.NET Application</p>
     </footer>
   </div>
-
   @Scripts.Render("~/bundles/bootstrap")
-  @Scripts.Render("~/bundles/jquery", "~/bundles/angular", "~/bundles/app")
+  @Scripts.Render("~/bundles/jquery", "~/bundles/angular")
+  <script type="text/javascript" src="~/Scripts/Library/dollar.js"></script>
+  <script type="text/javascript" src="~/app/app.js"></script>
+  
   @RenderSection("scripts", required: false)
 </body>
 </html>

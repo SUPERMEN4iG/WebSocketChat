@@ -34,7 +34,8 @@ namespace WebSocketChat
       //          "~/Scripts/Lib/App.js"));
 
       bundles.Add(new ScriptBundle("~/bundles/app").Include(
-        "~/app/app.js"));
+               "~/Scripts/Library/dollar.js",
+               "~/app/app.js"));
 
       // Set EnableOptimizations to false for debugging. For more information,
       // visit http://go.microsoft.com/fwlink/?LinkId=301862
